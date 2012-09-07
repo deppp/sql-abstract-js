@@ -18,6 +18,11 @@ util.inherits(Select, Statement);
 Select.prototype.setup = function () {
     this.forms  = { join: [] };
     this.params = { where: [] };
+    this.special_formatter = {
+        join: function (clause, defs) {
+            return defs.join(' ')
+        }
+    }
 };
 
 Select.prototype.rows = function (rows) {

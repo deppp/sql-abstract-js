@@ -77,12 +77,15 @@ Statement.prototype.format = function () {
         if (_.isUndefined(defs) || _.isEmptyObject(defs))
             return;
         
-        var formatter = self.special_formatter[clause];
+        var formatted,
+            formatter = self.special_formatter[clause];
         
         if (_.isFunction(formatter))
-            defs = formatter(defs);
-
-        parts.push(clause.toUpperCase() + ' ' + defs);
+            formatted = formatter(clause, defs);
+        else
+            formatted = clause.toUpperCase() + ' ' + defs
+        
+        parts.push(formatted);
     });
     
     return (this.options.pp) ?

@@ -5,7 +5,9 @@ _.mixin({
     reftype: function (object) {
         var ref = 'undefined';
         
-        if (_.isString(object))
+        if (_.isNumber(object))
+            ref = 'number';
+        else if (_.isString(object))
             ref = 'string';
         else if (_.isArray(object))
             ref = 'array';
@@ -76,6 +78,10 @@ var formats = {
     string: function (value, key) {
         this.params['where'].push(value);
         return key + ' = ?';
+    },
+
+    number: function (value, key) {
+        return formats['string'].call(this, value, key);
     }
 };
 
@@ -89,6 +95,7 @@ module.exports = {
         if (_.isObject(where)) {
             var obj = _.clone(where);
             var res = _.map(obj, function (value, key) {
+                // [TODO] fix numbers!
                 var format = _.reftype(value);
                 return formats[format].call(self, value, key);
             });

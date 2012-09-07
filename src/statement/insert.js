@@ -17,8 +17,12 @@ Insert.prototype.setup = function () {
     var self = this;
     
     this.special_formatter = {
-        'insert into': function (def) {
-            return def + ' ' + self.forms['columns'];
+        'insert into': function (clause, def) {
+            return [
+                clause.toUpperCase(),
+                def,
+                self.forms['columns']
+            ].join(' ');
         }
     };
     
