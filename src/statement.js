@@ -50,7 +50,7 @@ Statement.prototype.binds = function (subst) {
         return self.params[clause];
     });
 
-    console.log(self.params);
+    // console.log(self.params);
     params = _.flatten(_.compact(params));
     
     if (_.isObject(subst)) {
