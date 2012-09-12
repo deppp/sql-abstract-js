@@ -57,16 +57,27 @@ Select.prototype.from = function (tables) {
     return this;
 };
 
-Select.prototype.join = function (type, defs) {
-    var join = (_.isUndefined(defs)) ?
-        'JOIN ' + type :
-        type.toUpperCase() + ' JOIN ' + defs;
+Select.prototype.join = function (type, table, on) {
+    var join = '',
+        args = _.toArray(arguments);
+    
+    switch (args.length) {
+        case 1:
+            join = 'JOIN ' + args[0];
+            break;
+        case 2:
+            join = 'JOIN ' + args[0] + ' ON ' + args[1];
+            break;
+        case 3:
+            join = args[0].toUpperCase() + ' JOIN ' + args[1] + ' ON ' + args[2];
+            break;
+    }
     
     this.forms['join'].push(join);
     
     return this;
 };
 
-Select.prototype.leftJoin = function (defs) {
-    return this.join('LEFT', defs);
+Select.prototype.leftJoin = function (table, on) {
+    return this.join('LEFT', table, on);
 };
