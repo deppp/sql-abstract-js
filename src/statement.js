@@ -25,7 +25,10 @@ Statement.prototype.initialize = function (options) {
     this.special_formatter = {};
     
     this.options = _.defaults(options, {
-        pp: true
+        pp: true,
+        escape: function (str) {
+            return str;
+        }
     });
     
     this.setup();
@@ -45,7 +48,7 @@ Statement.prototype._load_clause = function (clauses) {
 
 Statement.prototype._add_more = function (this_obj, more_obj) {
     if (_.isUndefined(this_obj))
-        return more_obj
+        return more_obj;
     else if (_.isString(more_obj) && _.isString(this_obj))
         return this_obj + ' ' + more_obj;
     else if (_.isArray(more_obj) && _.isArray(this_obj))
@@ -89,13 +92,12 @@ Statement.prototype.format = function () {
         if (_.isUndefined(defs) || _.isEmptyObject(defs))
             return;
         
-        var formatted,
-            formatter = self.special_formatter[clause];
+        var formatted = "",
+            formatter = self.special_formatter[clause],
         
-        if (_.isFunction(formatter))
-            formatted = formatter(clause, defs);
-        else
-            formatted = clause.toUpperCase() + ' ' + defs
+        formatted = (_.isFunction(formatter)) ?
+            formatter(clause, defs) :
+            clause.toUpperCase() + ' ' + defs;
         
         parts.push(formatted);
     });
@@ -107,14 +109,15 @@ Statement.prototype.format = function () {
 
 // do not use
 Statement.prototype.toString = function (subst) {
-    var sql    = this.format(),
+    var self   = this,
+        sql    = this.format(),
         params = this.binds(subst);
     
     _.each(params, function (param) {
         // if (_.isString(param))
         //     param = '"' + param + '"';
         
-        sql = sql.replace('?', param);
+        sql = sql.replace('?', self.options.escape(param));
     });
     
     return sql;

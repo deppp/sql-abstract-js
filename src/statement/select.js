@@ -20,9 +20,9 @@ Select.prototype.setup = function () {
     this.params = { where: [] };
     this.special_formatter = {
         join: function (clause, defs) {
-            return defs.join(' ')
+            return defs.join(' ');
         }
-    }
+    };
 };
 
 Select.prototype.rows = function (rows) {
