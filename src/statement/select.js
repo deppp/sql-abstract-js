@@ -26,8 +26,10 @@ Select.prototype.setup = function () {
 };
 
 Select.prototype.rows = function (rows) {
-    if (typeof(rows) === 'string') {
-        this._select = rows;
+    this._select = rows;
+    
+    if (_.isString(rows)) {
+        this.forms['select'] = rows;
     } else if (_.isArray(rows)) {
         // [todo] we need to account for binds/params
         var list = _.map(rows, function (obj) {
@@ -41,6 +43,10 @@ Select.prototype.rows = function (rows) {
     }
     
     return this;
+};
+
+Select.prototype.addRows = function (rows) {
+    return this.rows(this._add_more(this._select, rows));
 };
 
 Select.prototype.from = function (tables) {

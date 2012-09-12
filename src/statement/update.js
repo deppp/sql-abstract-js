@@ -16,15 +16,15 @@ util.inherits(Update, Statement);
 
 Update.prototype.setup = function () {
     this.params = {
-        set: [],
-        where: []
+        set   : [],
+        where : []
     };
 };
 
 Update.prototype.table = function (name) {
     this.forms['update'] = name;
     return this;
-}
+};
 
 Update.prototype.set = function (defs) {
     var self = this;
