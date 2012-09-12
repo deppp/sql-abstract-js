@@ -1,5 +1,27 @@
 
-exports.Select = require('./statement/select');
-exports.Insert = require('./statement/insert');
-exports.Update = require('./statement/update');
-exports.Delete = require('./statement/delete');
+var _ = require('underscore');
+var statements = ['select', 'insert', 'update', 'delete'];
+
+exports.options = function (opt) {
+    _.each(statements, function (st) {
+        var obj = require('./statement/' + st);
+        var export_name = st.charAt(0).toUpperCase() + st.slice(1);
+        
+        exports[export_name] = function (more_opt) {
+            opt = _.extend(opt, more_opt);
+            return new obj(opt);
+        }
+    });
+};
+
+_.each(statements, function (st) {
+    var obj = require('./statement/' + st);
+    var export_name = st.charAt(0).toUpperCase() + st.slice(1);
+    
+    exports[export_name] = obj;
+});
+
+// exports.Select = require('./statement/select');
+// exports.Insert = require('./statement/insert');
+// exports.Update = require('./statement/update');
+// exports.Delete = require('./statement/delete');

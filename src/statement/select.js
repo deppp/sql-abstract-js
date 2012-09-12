@@ -66,3 +66,7 @@ Select.prototype.join = function (type, defs) {
     
     return this;
 };
+
+Select.prototype.leftJoin = function (defs) {
+    return this.join('LEFT', defs);
+};
