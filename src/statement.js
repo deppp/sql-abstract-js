@@ -51,9 +51,10 @@ Statement.prototype._add_more = function (this_obj, more_obj) {
         return more_obj;
     else if (_.isString(more_obj) && _.isString(this_obj))
         return this_obj + ' ' + more_obj;
-    else if (_.isArray(more_obj) && _.isArray(this_obj))
-        return _.flatten(this_obj.push(more_obj));
-    else if (_.isObject(more_obj) && _.isObject(this_obj)) {
+    else if (_.isArray(more_obj) && _.isArray(this_obj)) {
+        this_obj.push(more_obj);
+        return _.flatten(this_obj);
+    } else if (_.isObject(more_obj) && _.isObject(this_obj)) {
         return _.extend(this_obj, more_obj);
     }   
 };
