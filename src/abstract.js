@@ -8,8 +8,8 @@ exports.options = function (opt) {
         var export_name = st.charAt(0).toUpperCase() + st.slice(1);
         
         exports[export_name] = function (more_opt) {
-            opt = _.extend(opt, more_opt);
-            return new obj(opt);
+            var all_opt = _.extend(_.clone(opt), more_opt);
+            return new obj(all_opt);
         }
     });
 };
