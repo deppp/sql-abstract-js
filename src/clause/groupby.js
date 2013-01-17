@@ -2,7 +2,7 @@
 var _ = require('underscore');
 
 module.exports = {
-    orderby: function (defs) {
+    groupby: function (defs) {
         var grp = undefined;
         
         if (_.isString(defs))
