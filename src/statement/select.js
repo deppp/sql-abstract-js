@@ -5,9 +5,9 @@ var _         = require('underscore'),
 
 function Select (options) {
     this.print_name = 'SELECT';
-    this._load_clause(['where', 'orderby', 'limit']);
+    this._load_clause(['where', 'groupby', 'orderby', 'limit']);
     
-    this.clause_order = ['select', 'from', 'join', 'where', 'order by', 'limit'];
+    this.clause_order = ['select', 'from', 'join', 'where', 'group by', 'order by', 'limit'];
     
     this.initialize(options);
 }
