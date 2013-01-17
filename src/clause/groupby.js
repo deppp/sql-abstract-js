@@ -10,7 +10,7 @@ module.exports = {
         else if (_.isArray(defs))
             grp = defs.join(', ');
         
-        this.forms['group by'] = ordr;
+        this.forms['group by'] = grp;
         return this;
     }
 };
