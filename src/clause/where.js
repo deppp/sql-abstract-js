@@ -46,6 +46,10 @@ var format_special_op = {
         this.params['where'].push(values[1]);
         
         return key + ' BETWEEN ? AND ?';
+    }, 
+
+    is_op: function (values, key) {
+        return key + ' IS ' + values;
     }
 };
 
