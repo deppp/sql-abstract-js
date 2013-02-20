@@ -116,7 +116,7 @@ module.exports = {
         if (_.isUndefined(this._where))
             this.where(where);
         else if (_.isString(where) && _.isString(this._where))
-            this.where(where + ' ' + this._where);
+            this.where(this._where + ' ' + where);
         else if (_.isObject(where) && _.isObject(this._where)) {
             this.where(_.extend(this._where, where));
         }   
