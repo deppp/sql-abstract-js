@@ -1,91 +1,104 @@
 
-var _ = require('underscore');
+var _ = require('../util/underscore');
 
-_.mixin({
-    reftype: function (object) {
-        var ref = 'undefined';
-        
-        if (_.isNumber(object))
-            ref = 'number';
-        else if (_.isString(object))
-            ref = 'string';
-        else if (_.isArray(object))
-            ref = 'array';
-        else if (_.isObject(object))
-            ref = 'object';
-        
-        return ref;
-    }
-});
-
-function is_special_op (op) {
-    var special_ops = _.map(_.keys(format_special_op), function (key) {
-        return key.replace('_op', '');
-    });
+var is_special_op = function (value) {
+    var test = value;
     
-    return _.include(special_ops, op);
-}
+    if (_.isObject(value))
+        test = _.keys(value)[0];
+
+    if (! _.isString(test))
+        return false;
+    
+    return (test.charAt(0) == '$');
+};
+
+var get_q = function (num) {
+    var question = [];
+    _.times(num, function () { question.push('?') });
+
+    return question.join(',');
+};
 
 var format_special_op = {
-    in_op: function (values, key) {
-        var self = this;
-        var res = key + ' IN ';
+    in_op: function (values) {
+        var w = this.params['where'];
+        w.push.apply(w, values);
+        return ' IN (' + get_q(values.length) + ')';
+    },
 
-        var question = [];
-        _.times(values.length, function () { question.push('?') });
-
-        _.each(values, function (value) {
-            self.params['where'].push(value);
-        });
-        
-        return res + '(' + question.join(', ') + ')';
+    is_op: function (value) {
+        if (value == null) 
+            return ' IS NULL';
+        else {
+            this.params['where'].push(value);
+            return ' = ?';
+        }
     },
     
-    between_op: function (values, key) {
-        this.params['where'].push(values[0]);
-        this.params['where'].push(values[1]);
-        
-        return key + ' BETWEEN ? AND ?';
-    }, 
+    notin_op: function (values) {
+        var w = this.params['where'];
+        w.push.apply(w, values);
+        return ' NOT IN (' + get_q(values.length) + ')';
+    },
+    
+    not_op: function (value) {
+        if (value == null)
+            return ' IS NOT NULL';
+        else {
+            this.params['where'].push(value);
+            return ' != ?';
+        }
+    },
 
-    is_op: function (values, key) {
-        return key + ' IS ' + values;
+    btw_op: function (values) {
+        var w = this.params['where'];
+        w.push.apply(w, values);
+        return ' BETWEEN ? AND ?';
+    },
+    
+    like_op: function (value) {
+        this.params['where'].push(value);
+        return ' LIKE ?';
     }
 };
 
-var formats = {
-    array: function (values, key) {
+var process = {
+    object: function (keys, join) {
         var self = this;
-        var res  = _.map(values, function (value) {
-            if (_.isObject(value))
-                return formats['object'].call(self, value, key);
-            else {
+        if (! join) join = ' AND ';
+        
+        var res = _.map(keys, function (value, key) {
+            if (is_special_op(value)) {
+                var name = _.keys(value)[0],
+                    op   = name.substring(1) + '_op';
+                
+                return key + format_special_op[op].call(self, value[name]);
+            } else if (is_special_op(key)) {
+                var join = (key.substring(1) == 'or') ? ' OR ' : ' AND ',
+                    type = _.reftype(value);
+                
+                return '(' + process[type].call(self, value, join) + ')';
+            } else  {
                 self.params['where'].push(value);
                 return key + ' = ?';
             }
         });
         
-        return '(' + res.join(' OR ') + ')';
-    },
-    
-    object: function (values, key) {
-        var op = (_.keys(values))[0];
-        
-        if (is_special_op(op))
-            return format_special_op[op + '_op'].call(this, values[op], key);
-        else {
-            this.params['where'].push(values[op]);
-            return [key, op, '?'].join(' ');
-        }
-    },
-    
-    string: function (value, key) {
-        this.params['where'].push(value);
-        return key + ' = ?';
+        return res.join(join);
     },
 
-    number: function (value, key) {
-        return formats['string'].call(this, value, key);
+    array: function (keys, join) {
+        var self = this;
+        
+        if (! join) join = ' OR ';
+        
+        var res = _.map(keys, function (obj) {
+            var type = _.reftype(obj);
+            return process[type].call(self, obj);
+        });
+        
+         return res.join(join);
     }
 };
 
@@ -93,34 +106,24 @@ module.exports = {
     where: function (where) {
         var self = this;
         
-        this._where = where; 
+        this._where = where;
         this.params['where'] = [];
         
         if (_.isObject(where)) {
             var obj = _.clone(where);
-            var res = _.map(obj, function (value, key) {
-                // [TODO] fix numbers!
-                var format = _.reftype(value);
-                return formats[format].call(self, value, key);
-            });
             
-            where = res.join(' AND ');
+            var type = _.reftype(obj);
+            var res = process[type].call(self, obj);
+
+            this.forms['where'] = res;
+        } else {
+            this.forms['where'] = where;
         }
-        
-        this.forms['where'] = where;
         
         return this;
     },
-    
+
     addWhere: function (where) {
-        if (_.isUndefined(this._where))
-            this.where(where);
-        else if (_.isString(where) && _.isString(this._where))
-            this.where(this._where + ' ' + where);
-        else if (_.isObject(where) && _.isObject(this._where)) {
-            this.where(_.extend(this._where, where));
-        }   
         
-        return this;
     }
 };

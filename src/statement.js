@@ -1,15 +1,8 @@
 
-var _    = require('underscore'),
+var _    = require('./util/underscore'),
     util = require('util');
 
-_.mixin({
-    // check for numbers
-    isEmptyObject: function (obj) {
-        return (_.isNumber(obj)) ?
-            false :
-            _.isEmpty(obj);
-    }
-})
+var Transform = require('./transform');
 
 function Statement (options) {
     this.initialize(options);
@@ -23,15 +16,44 @@ Statement.prototype.initialize = function (options) {
     this.forms  = {};
     this.params = {};
     this.special_formatter = {};
+    this.associated_tables = [];
     
     this.options = _.defaults(options, {
         pp: true,
         escape: function (str) {
             return str;
-        }
+        },
+
+        transform: new Transform()
+    });
+
+    this.transform = this.options.transform;
+    this.setup();
+};
+
+// use DAG instead
+Statement.prototype.find_associated_table = function (where) {
+    return _.where(_.values(this.associated_tables), where)[0]; 
+};
+
+Statement.prototype.find_joined_table = function (table) {
+    var alias = null;
+    
+    _.each(this._joins, function (joined) {
+        var a1 = joined[2].split('.')[0],
+            a2 = joined[3].split('.')[0];
+        
+        if (a1 == table.alias)
+            return alias = a2;
+        else if (a2 == table.alias)
+            return alias = a1;
     });
     
-    this.setup();
+    return this.find_associated_table({ alias: alias });
+};
+
+Statement.prototype.table_from_query = function () {
+    
 };
 
 Statement.prototype.setup = function () {};
@@ -65,12 +87,11 @@ Statement.prototype.binds = function (subst) {
     var params = _.map(this.clause_order, function (clause) {
         return self.params[clause];
     });
-
-    // console.log(self.params);
+    
     params = _.flatten(_.compact(params));
     
     if (_.isObject(subst)) {
-        return _.map(params, function (param) {
+        params = _.map(params, function (param) {
             return (
                 _.isString(param) &&
                 param.charAt(0) == ':' &&
@@ -79,20 +100,24 @@ Statement.prototype.binds = function (subst) {
                 subst[param.substr(1)] :
                 param;
         });
-    } else {
-        return params;
     }
+    
+    var subparams = _.map(this.params['subquery'], function (query) {
+        return query.binds();
+    });
+    
+    return _.flatten(subparams).concat(params);
 };
 
 Statement.prototype.format = function () {
     var self  = this,
         parts = [];
-    
+
     _.each(this.clause_order, function (clause) {
         var defs = self.forms[clause];
         if (_.isUndefined(defs) || _.isEmptyObject(defs))
             return;
-        
+
         var formatted = "",
             formatter = self.special_formatter[clause],
         
