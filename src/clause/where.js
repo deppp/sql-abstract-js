@@ -79,6 +79,10 @@ var process = {
                     type = _.reftype(value);
                 
                 return '(' + process[type].call(self, value, join) + ')';
+            } else if (_.isObject(value)) {
+                var op = _.keys(value)[0];
+                self.params['where'].push(value[op]);
+                return [key, op, '?'].join(' ');
             } else  {
                 self.params['where'].push(value);
                 return key + ' = ?';

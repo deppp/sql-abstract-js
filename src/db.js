@@ -1,6 +1,6 @@
 
-var _ = require('./util/underscore');
-var Table = require('./table');
+var _ = require('./util/underscore'),
+    Table = require('./table');
 
 function Runner (db, query) {
     var self = this;
@@ -35,10 +35,9 @@ function DB (type, options) {
 module.exports = DB;
 
 DB.prototype.query = function (query, cb) {
-    if (! cb)
-        return new Runner(this, query);
-    else
-        this._db.query(query, cb);
+    return (! cb) ?
+        new Runner(this, query)   :
+        this._db.query(query, cb) ;
 };
 
 DB.prototype.dao = function (query, cb) {
